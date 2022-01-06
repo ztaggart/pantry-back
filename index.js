@@ -1,67 +1,100 @@
+require('dotenv').config()
 const http = require('http')
 const cors = require('cors')
 const express = require('express')
 const app = express()
+const mongoose = require('mongoose')
+const Recipe = require('./models/recipe')
 
 app.use(express.json())
 app.use(cors())
 app.use(express.static('build'))
 
-let recipes = [
-    {
-        "id": 1,
-        "name": "oatmeal with strawberries",
-        "ingredients": "dried oats, strawberries, milk",
-        "directions": "Stir in oats, milk, and salt and cook, stirring frequently, until oatmeal is creamy and thickened, about 3 minutes. When done, mix in strawberries."
-      },
-      {
-        "id": 2,
-        "name": "cereal",
-        "ingredients": "milk, dry cereal",
-        "directions": "Place cereal in a bowl and then add milk. It's not hard. Don't you dare put milk first."
-      },
-      {
-        "id": 3,
-        "name": "salad",
-        "ingredients": "romaine lettuce, tomatoes, carrots, cucumber, other vegetables, dressing",
-        "directions": "Toss all vegetables until evenly spread. Then add dressing of your choosing."
-      }
+const errorHandler = require('./errorHandler')
+const requestLogger = (request, response, next) => {
+    console.log('Method:', request.method)
+    console.log('Path:  ', request.path)
+    console.log('Body:  ', request.body)
+    console.log('---')
+    next()
+  }
 
-]
+app.use(requestLogger)
 
+//basic ping
 app.get('/', (request, response) => {
     response.send('<h1>Hello World!</h1>')
 })
   
+//get all recipes
 app.get('/api/recipes', (request, response) => {
-    response.json(recipes)
+    console.log("in recipes")
+    Recipe.find({}).then(recipes => response.json(recipes))
 })
 
-app.get('/api/recipe/:id', (request, response) => {
-    const id = Number(request.params.id);
-    const recipe = recipes.find(recipe => recipe.id === id)
-    if(recipe === undefined) {
-        response.status(404).end;
-    }
-
-    response.json(recipe)
-    
+//get a recipe by id
+app.get('/api/recipe/:id', (request, response, next) => {
+    Recipe.findById(request.params.id).then(recipe => {
+        if(recipe) {
+            response.json(recipe)
+        } else {
+            response.status(404).end()
+        }
+    })
+    .catch(error => {
+        next(error)
+    })
 })
 
-app.delete('/api/recipes/:id', (request, response) => {
-    const id = Number(request.params.id)
-    recipes = recipes.filter(recipe => recipe.id !== id)
+//post a new recipe
+app.post('/api/recipes', (request, response, next) => {
+    const body = request.body
+
+    /*if (body.name === undefined) {
+        return response.status(400).json({ error: 'name missing' })
+    } else if (body.ingredients === undefined) {
+        return response.status(400).json({ error: 'ingredients missing'})
+    } else if (body.directions === undefined) {
+        return response.status(400).json({ error: 'directions missing'})
+    }*/
+
+    const recipe = new Recipe({
+        name: body.name,
+        ingredients: body.ingredients,
+        directions: body.directions
+    })
+
+    recipe.save()
+    .then(recipe => response.json(recipe))
+    .catch(error => next(error))
+})
+
+//delete recipe by id
+app.delete('/api/recipe/:id', (request, response) => {
+    Recipe.findByIdAndDelete(request.params.id).then(recipe => {
+        if (recipe) {
+            response.json(recipe)
+            response.status(204).end()
+        } else {
+            response.status(404).end()
+        }
+    })
+    .catch(error => {
+        console.log(error);
+        response.status(400).send({ error: 'malformatted id' })
+    })
+})
+
+const unknownEndpoint = (request, response) => {
+    response.status(404).send({ error: 'unknown endpoint' })
+}
   
-    response.status(204).end()
-})
+app.use(unknownEndpoint)
 
-app.post('/api/recipes', (request, response) => {
-    const recipe = request.body
-    console.log(recipe)
-    response.json(recipe)
-})
+//MUST be last middleware, any other that get added must be above this
+app.use(errorHandler);
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
 })

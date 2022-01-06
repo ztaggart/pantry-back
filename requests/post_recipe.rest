@@ -1,0 +1,8 @@
+POST http://localhost:3001/api/recipes
+Content-Type: application/json
+
+{
+    "name": "oatmeal with strawberries",
+    "ingredients": "dried oats, strawberries, milk",
+    "directions": "Stir in oats, milk, and salt and cook, stirring frequently, until oatmeal is creamy and thickened, about 3 minutes. When done, mix in strawberries."
+}
