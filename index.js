@@ -17,7 +17,8 @@ const requestLogger = (request, response, next) => {
     console.log('Body:  ', request.body)
     console.log('---')
     next()
-  }
+    console.log('after next')
+}
 
 app.use(requestLogger)
 
@@ -33,7 +34,7 @@ app.get('/api/recipes', (request, response) => {
 })
 
 //get a recipe by id
-app.get('/api/recipe/:id', (request, response, next) => {
+app.get('/api/recipes/:id', (request, response, next) => {
     Recipe.findById(request.params.id).then(recipe => {
         if(recipe) {
             response.json(recipe)
@@ -70,7 +71,8 @@ app.post('/api/recipes', (request, response, next) => {
 })
 
 //delete recipe by id
-app.delete('/api/recipe/:id', (request, response) => {
+app.delete('/api/recipes/:id', (request, response, next) => {
+    console.log('ping in delete')
     Recipe.findByIdAndDelete(request.params.id).then(recipe => {
         if (recipe) {
             response.json(recipe)
@@ -80,8 +82,7 @@ app.delete('/api/recipe/:id', (request, response) => {
         }
     })
     .catch(error => {
-        console.log(error);
-        response.status(400).send({ error: 'malformatted id' })
+        next(error)
     })
 })
 
