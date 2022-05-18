@@ -71,7 +71,7 @@ itemRouter.put('/:id', async (request, response, next) => {
     const body = request.body
     const update = await Item.updateOne({id: request.params.id}, {name: body.name, quantity: body.quantity, unit: body.unit, expiry: body.expiry})
     
-    const updatedItem = await updatedItem.findById(request.params.id)
+    const updatedItem = await Item.findById(request.params.id)
     if (update) {
         response.status(200).json(updatedItem)
     } else {
