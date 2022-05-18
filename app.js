@@ -1,8 +1,14 @@
 const config = require('./utils/config')
 const express = require('express')
+require('express-async-errors')
 const app = express()
 const cors = require('cors')
+
 const recipeRouter = require('./controllers/recipes')
+const userRouter = require('./controllers/users')
+const pantryRouter = require('./controllers/pantry')
+const loginRouter = require('./controllers/login')
+
 const middleware = require('./utils/middleware')
 const logger = require('./utils/logger')
 const mongoose = require('mongoose')
@@ -23,6 +29,9 @@ app.use(express.json())
 app.use(middleware.requestLogger)
 
 app.use('/api/recipes', recipeRouter)
+app.use('/api/users', userRouter)
+app.use('/api/pantry', pantryRouter)
+app.use('/api/login', loginRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)

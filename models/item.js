@@ -1,15 +1,19 @@
 const mongoose = require('mongoose')
 
-const recipeSchema = new mongoose.Schema({
+const itemSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
     },
-    ingredients: {
-        type: Array,
+    quantity: {
+        type: String,
         required: true
     },
-    directions: {
+    unit: {
+        type: String,
+        required: true
+    },
+    expiry: {
         type: String
     },
     user: {
@@ -18,7 +22,7 @@ const recipeSchema = new mongoose.Schema({
     }
 })
 
-recipeSchema.set('toJSON', {
+itemSchema.set('toJSON', {
     transform: (document, returnedObject) => {
         returnedObject.id = returnedObject._id.toString()
         delete returnedObject._id
@@ -26,4 +30,4 @@ recipeSchema.set('toJSON', {
     }
 })
 
-module.exports = mongoose.model('Recipe', recipeSchema)
+module.exports = mongoose.model('Item', itemSchema)

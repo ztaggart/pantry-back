@@ -1,8 +1,10 @@
 POST http://localhost:3001/api/recipes
 Content-Type: application/json
+Authorization: bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6Imh1bmdyeV9tYW4iLCJpZCI6IjYyN2FjNDc1M2M4ZjdhNDM3MGQxZTA5MSIsImlhdCI6MTY1MjIxNzgwNH0.mX7tg76k1BkDuHTjC9GjZRqYdFBOdS1HL3KgHugmvbg
 
 {
     "name": "oatmeal with strawberries",
     "ingredients": "dried oats, strawberries, milk",
-    "directions": "Stir in oats, milk, and salt and cook, stirring frequently, until oatmeal is creamy and thickened, about 3 minutes. When done, mix in strawberries."
+    "directions": "Stir in oats, milk, and salt and cook, stirring frequently, until oatmeal is creamy and thickened, about 3 minutes. When done, mix in strawberries.",
+    "userId": "627ac4753c8f7a4370d1e091"
 }

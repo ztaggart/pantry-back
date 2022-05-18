@@ -1,63 +1,72 @@
 const recipeRouter = require('express').Router()
 const Recipe = require ('../models/recipe')
+const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+
+const getTokenFrom = (request) => {
+    const auth = request.get('Authorization')
+    if (auth && auth.toLowerCase().startsWith('bearer ')) {
+        return auth.substring(7)
+    } else {
+        return null
+    }
+}
+
 //get all recipes
-recipeRouter.get('/', (request, response) => {
-    console.log('in recipes')
-    Recipe.find({}).then(recipes => {
-        response.json(recipes.map(note => note.toJSON()))
-    })
+recipeRouter.get('/', async (request, response) => {
+    const recipes = await Recipe.find({})
+    response.json(recipes)
 })
 
 //get a recipe by id
-recipeRouter.get('/:id', (request, response, next) => {
-    Recipe.findById(request.params.id).then(recipe => {
-        if(recipe) {
-            response.json(recipe)
-        } else {
-            response.status(404).end()
-        }
-    }).catch(error => {
-        next(error)
-    })
+recipeRouter.get('/:id', async (request, response, next) => {
+    const recipe = await Recipe.findById(request.params.id)
+    if(recipe) {
+        response.json(recipe)
+    } else {
+        response.status(404).end()
+    }
 })
 
 //post a new recipe
-recipeRouter.post('/', (request, response, next) => {
+recipeRouter.post('/', async (request, response, next) => {
+    console.log("here")
     const body = request.body
 
-    /*if (body.name === undefined) {
-        return response.status(400).json({ error: 'name missing' })
-    } else if (body.ingredients === undefined) {
-        return response.status(400).json({ error: 'ingredients missing'})
-    } else if (body.directions === undefined) {
-        return response.status(400).json({ error: 'directions missing'})
-    }*/
+    const token = getTokenFrom(request)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!decodedToken.id) {
+        return response.status(402).json({ error: 'token missing or invalid' })
+    }
+    
+    const user = await User.findById(decodedToken.id)
+    if (user == null) {
+        return response.status(400).json({error: 'invalid user Id'})
+    }
 
     const recipe = new Recipe({
         name: body.name,
         ingredients: body.ingredients,
-        directions: body.directions
+        directions: body.directions,
+        user: user._id
     })
 
-    recipe.save()
-        .then(recipe => response.json(recipe))
-        .catch(error => next(error))
+    const savedRecipe = await recipe.save()
+    user.recipes = user.recipes.concat(savedRecipe._id)
+    await user.save()
+
+    response.status(201).json(savedRecipe)
 })
 
 //delete recipe by id
-recipeRouter.delete('/:id', (request, response, next) => {
-    console.log('ping in delete')
-    Recipe.findByIdAndDelete(request.params.id).then(recipe => {
-        if (recipe) {
-            response.json(recipe)
-            response.status(204).end()
-        } else {
-            response.status(404).end()
-        }
-    })
-        .catch(error => {
-            next(error)
-        })
+recipeRouter.delete('/:id', async (request, response) => {
+    const recipe = await Recipe.findByIdAndDelete(request.params.id)
+
+    if (recipe) {
+        response.status(204).json(recipe)
+    } else {
+        response.status(404).end()
+    }
 })
 
 module.exports = recipeRouter
